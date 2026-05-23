@@ -96,7 +96,7 @@ export async function searchBySubject(subject, opts) {
 }
 
 export async function trending(limit = 10) {
-  return search("*", { sort: "new", limit });
+  return searchBySubject("fiction", { sort: "new", limit });
 }
 
 export function getCoverUrl(coverId, size = "M") {

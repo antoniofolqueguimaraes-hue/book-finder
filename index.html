@@ -16,6 +16,10 @@
       <div class="logo">
         <h1>Book Finder</h1>
       </div>
+      <nav class="app-nav">
+        <button id="nav-home" class="nav-btn active">Search</button>
+        <button id="nav-reading-list" class="nav-btn">Reading List</button>
+      </nav>
       <form id="search-form" class="search-bar">
         <select id="search-type" aria-label="Search Type">
           <option value="q">All</option>
@@ -41,6 +45,18 @@
         <h2>Search Results <span id="results-count"></span></h2>
         <div id="results-grid" class="book-grid"></div>
         <button id="load-more-btn" class="hidden">Load More</button>
+      </section>
+
+      <section id="reading-list-section" class="section hidden">
+        <div class="section-header">
+          <h2>My Reading List</h2>
+          <select id="reading-list-filter" class="filter-dropdown" aria-label="Filter reading list">
+            <option value="all">All</option>
+            <option value="Want to Read">Want to Read</option>
+            <option value="Read">Read</option>
+          </select>
+        </div>
+        <div id="reading-list-grid" class="book-grid"></div>
       </section>
     </main>
   </div>

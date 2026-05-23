@@ -1,4 +1,5 @@
 import { search, searchByTitle, searchByAuthor, searchBySubject, searchByISBN, trending } from './api.js';
+import { db, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from './firebase.js';
 
 const searchForm = document.getElementById('search-form');
 const searchInput = document.getElementById('search-input');
@@ -11,6 +12,12 @@ const loadMoreBtn = document.getElementById('load-more-btn');
 const trendingSection = document.getElementById('trending-section');
 const trendingGrid = document.getElementById('trending-grid');
 
+const navHome = document.getElementById('nav-home');
+const navReadingList = document.getElementById('nav-reading-list');
+const readingListSection = document.getElementById('reading-list-section');
+const readingListFilter = document.getElementById('reading-list-filter');
+const readingListGrid = document.getElementById('reading-list-grid');
+
 let currentSession = {
   query: null,
   type: null,
@@ -21,11 +28,8 @@ let currentSession = {
 };
 
 function renderBookCard(book) {
-  const card = document.createElement('a');
+  const card = document.createElement('div');
   card.className = 'book-card';
-  card.href = book.openLibraryUrl || '#';
-  card.target = '_blank';
-  card.rel = 'noopener noreferrer';
 
   const coverHtml = book.coverUrl
     ? `<img src="${book.coverUrl}" alt="${book.title} cover" class="cover-img" loading="lazy">`
@@ -44,20 +48,165 @@ function renderBookCard(book) {
     : 'Unknown Author';
 
   card.innerHTML = `
-    <div class="cover-wrapper">
+    <a href="${book.openLibraryUrl || '#'}" target="_blank" rel="noopener noreferrer" class="cover-wrapper">
       ${coverHtml}
-    </div>
+    </a>
     <div class="book-info">
-      <h3 class="book-title">${book.title || 'Unknown Title'}</h3>
+      <a href="${book.openLibraryUrl || '#'}" target="_blank" rel="noopener noreferrer">
+        <h3 class="book-title">${book.title || 'Unknown Title'}</h3>
+      </a>
       <p class="book-authors">${authorsText}</p>
       <div class="book-meta">
         ${yearHtml}
         ${ratingHtml}
       </div>
+      <button class="save-btn">Save</button>
     </div>
   `;
+
+  const saveBtn = card.querySelector('.save-btn');
+  saveBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      saveBtn.textContent = 'Saving...';
+      saveBtn.disabled = true;
+      await addDoc(collection(db, "saved_books"), {
+        title: book.title || 'Unknown Title',
+        authors: book.authors || [],
+        coverUrl: book.coverUrl || null,
+        firstPublishYear: book.firstPublishYear || null,
+        ratingsAverage: book.ratingsAverage || null,
+        openLibraryUrl: book.openLibraryUrl || null,
+        savedAt: new Date().toISOString(),
+        status: 'Want to Read'
+      });
+      saveBtn.textContent = 'Saved';
+      saveBtn.classList.add('saved');
+    } catch (err) {
+      console.error("Error saving book: ", err);
+      saveBtn.textContent = 'Error';
+      saveBtn.disabled = false;
+      alert("Failed to save. Please check your Firebase config.");
+    }
+  });
+
   return card;
 }
+
+function renderReadingListCard(book, docId) {
+  const card = document.createElement('div');
+  card.className = 'book-card';
+
+  const coverHtml = book.coverUrl
+    ? `<img src="${book.coverUrl}" alt="${book.title} cover" class="cover-img" loading="lazy">`
+    : `<div class="cover-placeholder">No Cover Available</div>`;
+
+  const authorsText = book.authors && book.authors.length > 0
+    ? book.authors.join(', ')
+    : 'Unknown Author';
+
+  card.innerHTML = `
+    <a href="${book.openLibraryUrl || '#'}" target="_blank" rel="noopener noreferrer" class="cover-wrapper">
+      ${coverHtml}
+    </a>
+    <div class="book-info">
+      <a href="${book.openLibraryUrl || '#'}" target="_blank" rel="noopener noreferrer">
+        <h3 class="book-title">${book.title || 'Unknown Title'}</h3>
+      </a>
+      <p class="book-authors">${authorsText}</p>
+      
+      <div class="reading-list-controls">
+        <select class="status-select">
+          <option value="Want to Read" ${book.status === 'Want to Read' ? 'selected' : ''}>Want to Read</option>
+          <option value="Read" ${book.status === 'Read' ? 'selected' : ''}>Read</option>
+        </select>
+        <button class="remove-btn">Remove</button>
+      </div>
+    </div>
+  `;
+
+  const statusSelect = card.querySelector('.status-select');
+  statusSelect.addEventListener('change', async (e) => {
+    try {
+      await updateDoc(doc(db, "saved_books", docId), {
+        status: e.target.value
+      });
+    } catch (err) {
+      console.error("Error updating status: ", err);
+      alert("Failed to update status.");
+    }
+    // Re-filter if needed
+    if (readingListFilter.value !== 'all' && readingListFilter.value !== e.target.value) {
+      card.remove();
+    }
+  });
+
+  const removeBtn = card.querySelector('.remove-btn');
+  removeBtn.addEventListener('click', async () => {
+    try {
+      await deleteDoc(doc(db, "saved_books", docId));
+      card.remove();
+    } catch (err) {
+      console.error("Error deleting book: ", err);
+      alert("Failed to remove book.");
+    }
+  });
+
+  return card;
+}
+
+async function loadReadingList() {
+  readingListGrid.innerHTML = '<div class="loader">Loading your books...</div>';
+  try {
+    const querySnapshot = await getDocs(collection(db, "saved_books"));
+    readingListGrid.innerHTML = '';
+    let count = 0;
+    
+    querySnapshot.forEach((docSnap) => {
+      const book = docSnap.data();
+      const docId = docSnap.id;
+      
+      if (readingListFilter.value === 'all' || book.status === readingListFilter.value) {
+        readingListGrid.appendChild(renderReadingListCard(book, docId));
+        count++;
+      }
+    });
+
+    if (count === 0) {
+      readingListGrid.innerHTML = '<p class="loader">No books found in this list.</p>';
+    }
+  } catch (err) {
+    console.error(err);
+    readingListGrid.innerHTML = `<p class="loader">Error loading reading list: ${err.message}</p>`;
+  }
+}
+
+navHome.addEventListener('click', () => {
+  navHome.classList.add('active');
+  navReadingList.classList.remove('active');
+  
+  readingListSection.classList.add('hidden');
+  
+  if (currentSession.query) {
+    resultsSection.classList.remove('hidden');
+  } else {
+    trendingSection.classList.remove('hidden');
+  }
+});
+
+navReadingList.addEventListener('click', () => {
+  navReadingList.classList.add('active');
+  navHome.classList.remove('active');
+  
+  trendingSection.classList.add('hidden');
+  resultsSection.classList.add('hidden');
+  readingListSection.classList.remove('hidden');
+  
+  loadReadingList();
+});
+
+readingListFilter.addEventListener('change', loadReadingList);
 
 async function loadTrending() {
   try {
