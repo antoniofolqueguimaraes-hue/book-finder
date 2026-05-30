@@ -78,14 +78,14 @@
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } 
     from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-  const firebaseConfig = {
-  apiKey: "AIzaSyDAVBQqdd9xab6XI_BcUZf0HAAbaFTOfEo",
-  authDomain: "book-finder-6216c.firebaseapp.com",
-  projectId: "book-finder-6216c",
-  storageBucket: "book-finder-6216c.firebasestorage.app",
-  messagingSenderId: "1024236519044",
-  appId: "1:1024236519044:web:59cd51d7e100e3ecf64cd1"
-};
+const firebaseConfig = {
+    apiKey: "AIzaSyDAVBQqdd9xab6XI_BcUZf0HAAbaFTOfEo",
+    authDomain: "book-finder-6216c.firebaseapp.com",
+    projectId: "book-finder-6216c",
+    storageBucket: "book-finder-6216c.firebasestorage.app",
+    messagingSenderId: "1024236519044",
+    appId: "1:1024236519044:web:59cd51d7e100e3ecf64cd1"
+  };
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
