@@ -73,55 +73,49 @@
     </main>
   </div>
   <script type="module" src="app.js"></script>
-  <!-- Firebase SDK -->
-<script type="module">
+ <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } 
     from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-  // Your Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyDAVBQqdd9xab6XI_BcUZf0HAAbaFTOfEo",
-  authDomain: "book-finder-6216c.firebaseapp.com",
-  projectId: "book-finder-6216c",
-  storageBucket: "book-finder-6216c.firebasestorage.app",
-  messagingSenderId: "1024236519044",
-  appId: "1:1024236519044:web:59cd51d7e100e3ecf64cd1"
-};
+  const firebaseConfig = {
+    apiKey: "PASTE_YOUR_REAL_VALUE_HERE",
+    authDomain: "PASTE_YOUR_REAL_VALUE_HERE",
+    projectId: "PASTE_YOUR_REAL_VALUE_HERE",
+    storageBucket: "PASTE_YOUR_REAL_VALUE_HERE",
+    messagingSenderId: "PASTE_YOUR_REAL_VALUE_HERE",
+    appId: "PASTE_YOUR_REAL_VALUE_HERE"
+  };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
 
-  // Sign In with Google
-  window.signInWithGoogle = async function() {
+  async function signInWithGoogle() {
     try {
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      console.log("Signed in as:", user.displayName);
+      console.log("Signed in:", result.user.displayName);
     } catch (error) {
       console.error("Error:", error.message);
     }
   }
 
-  // Sign Out
-  window.signOutUser = async function() {
+  async function signOutUser() {
     await signOut(auth);
-    console.log("Signed out");
   }
 
-  // Listen for auth state changes
+  // ✅ This is the fix — attach clicks inside the module
+  document.getElementById("login-btn").addEventListener("click", signInWithGoogle);
+  document.getElementById("logout-btn").addEventListener("click", signOutUser);
+
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // User is signed in
       document.getElementById("user-name").textContent = user.displayName;
       document.getElementById("user-photo").src = user.photoURL;
       document.getElementById("login-btn").style.display = "none";
       document.getElementById("logout-btn").style.display = "block";
       document.getElementById("user-info").style.display = "flex";
     } else {
-      // User is signed out
       document.getElementById("login-btn").style.display = "block";
       document.getElementById("logout-btn").style.display = "none";
       document.getElementById("user-info").style.display = "none";
