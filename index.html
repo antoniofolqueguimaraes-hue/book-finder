@@ -63,3 +63,14 @@
   <script type="module" src="app.js"></script>
 </body>
 </html>
+<!-- Login Button -->
+<button id="login-btn" onclick="signInWithGoogle()">
+  Sign in with Google
+</button>
+
+<!-- User Info (shown when logged in) -->
+<div id="user-info" style="display:none">
+  <img id="user-photo" width="32" height="32" style="border-radius:50%">
+  <span id="user-name"></span>
+  <button id="logout-btn" onclick="signOutUser()">Sign Out</button>
+</div>
