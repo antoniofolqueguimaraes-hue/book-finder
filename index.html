@@ -16,10 +16,22 @@
       <div class="logo">
         <h1>Book Finder</h1>
       </div>
-      <nav class="app-nav">
-        <button id="nav-home" class="nav-btn active">Search</button>
-        <button id="nav-reading-list" class="nav-btn">Reading List</button>
-      </nav>
+    <nav class="app-nav">
+    <button id="nav-home" class="nav-btn active">Search</button>
+    <button id="nav-reading-list" class="nav-btn">Reading List</button>
+
+    <!-- Login Button -->
+    <button id="login-btn" onclick="signInWithGoogle()">
+        Sign in with Google
+    </button>
+
+    <!-- User Info (shown when logged in) -->
+    <div id="user-info" style="display:none; align-items:center; gap:8px;">
+        <img id="user-photo" width="32" height="32" style="border-radius:50%;">
+        <span id="user-name"></span>
+        <button id="logout-btn" onclick="signOutUser()">Sign Out</button>
+    </div>
+</nav>
       <form id="search-form" class="search-bar">
         <select id="search-type" aria-label="Search Type">
           <option value="q">All</option>
@@ -61,16 +73,60 @@
     </main>
   </div>
   <script type="module" src="app.js"></script>
+  <!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } 
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+  // Your Firebase config
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  // Sign In with Google
+  window.signInWithGoogle = async function() {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      console.log("Signed in as:", user.displayName);
+    } catch (error) {
+      console.error("Error:", error.message);
+    }
+  }
+
+  // Sign Out
+  window.signOutUser = async function() {
+    await signOut(auth);
+    console.log("Signed out");
+  }
+
+  // Listen for auth state changes
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is signed in
+      document.getElementById("user-name").textContent = user.displayName;
+      document.getElementById("user-photo").src = user.photoURL;
+      document.getElementById("login-btn").style.display = "none";
+      document.getElementById("logout-btn").style.display = "block";
+      document.getElementById("user-info").style.display = "flex";
+    } else {
+      // User is signed out
+      document.getElementById("login-btn").style.display = "block";
+      document.getElementById("logout-btn").style.display = "none";
+      document.getElementById("user-info").style.display = "none";
+    }
+  });
+</script>
 </body>
 </html>
-<!-- Login Button -->
-<button id="login-btn" onclick="signInWithGoogle()">
-  Sign in with Google
-</button>
-
-<!-- User Info (shown when logged in) -->
-<div id="user-info" style="display:none">
-  <img id="user-photo" width="32" height="32" style="border-radius:50%">
-  <span id="user-name"></span>
-  <button id="logout-btn" onclick="signOutUser()">Sign Out</button>
-</div>
